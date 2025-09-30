@@ -12,6 +12,8 @@ jobs:
   build:
     name: Build Kernel with build_kernel.sh
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
