@@ -73,6 +73,8 @@ fi
 echo 'source "drivers/net/wireless/aic8800/Kconfig"' >> ${WIRELESS_KCONFIG}
 echo 'obj-$(CONFIG_AIC_WLAN_SUPPORT) += aic8800/' >> ${KERNEL_DIR}/drivers/net/wireless/Makefile
 
+sed -i 's/size_t len)/size_t len, u32 ch_sw_tm_us)/' "${KERNEL_DIR}/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_main.c"
+
 # --- VERIFICATION STEP 1 --- #
 echo "--> Verifying Kconfig patch..."
 grep "aic8800" ${WIRELESS_KCONFIG} || (echo "FATAL: Kconfig patch verification failed!" && exit 1)
