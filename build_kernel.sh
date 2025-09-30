@@ -42,7 +42,7 @@ cp "${CONFIG_FILE_PATH}" "${KERNEL_DIR}/.config"
 echo "Cloning AIC8800 driver source..."
 AIC_DRIVER_DIR=${BUILD_DIR}/aic8800-wifi
 AIC_DRIVER_GIT_URL="https://github.com/aliosjohnson-svg/aic8800-wifi.git"
-git clone https://github.com/aic-semiconductor/aic8800-wifi.git --depth=1
+git clone https://github.com/aliosjohnson-svg/aic8800-wifi.git --depth=1
 
 echo "--> Integrating AIC8800 driver into kernel source..."
 DRIVER_TARGET_DIR=${KERNEL_DIR}/drivers/net/wireless/aic8800
