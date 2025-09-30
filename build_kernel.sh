@@ -75,6 +75,26 @@ echo 'obj-$(CONFIG_AIC_WLAN_SUPPORT) += aic8800/' >> ${KERNEL_DIR}/drivers/net/w
 
 sed -i 's/size_t len)/size_t len, u32 ch_sw_tm_us)/' "${KERNEL_DIR}/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_main.c"
 
+echo "--> Applying kernel v6.6 TDLS API patch..."
+cat > /tmp/tdls_api.patch <<EOF
+---
+ a/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_main.c
++++ b/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_main.c
+@@ -5175,7 +5175,8 @@
+ #endif
+ 	const u8 *buf,
+-	size_t len)
++	size_t len,
++	u32 ch_sw_tm_us)
+ 
+ {
+ 	#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 15, 0)
+EOF
+
+cd ${KERNEL_DIR}
+patch -p1 < /tmp/tdls_api.patch
+cd ${BUILD_DIR}
+
 # --- VERIFICATION STEP 1 --- #
 echo "--> Verifying Kconfig patch..."
 grep "aic8800" ${WIRELESS_KCONFIG} || (echo "FATAL: Kconfig patch verification failed!" && exit 1)
