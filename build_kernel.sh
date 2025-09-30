@@ -20,8 +20,11 @@ rm -rf ${KERNEL_DIR} ${PMAPORTS_DIR}
 mkdir -p ${KERNEL_DIR}
 
 # === Get Kernel Source ===
-echo "Cloning kernel source..."
-git clone --depth 1 --branch ${KERNEL_TAG} ${KERNEL_GIT_URL} ${KERNEL_DIR}
+echo "--> Cloning kernel repository..."
+git clone https://github.com/aliosjohnson-svg/linux.git -b v6.6-msm8916 --depth=1 kernel
+
+echo "--> Cloning new AIC8800 driver repository..."
+git clone https://github.com/aliosjohnson-svg/aic8800_linux_drvier.git
 
 # === Get Kernel Configuration by cloning pmaports (Robust method) ===
 echo "Cloning pmaports repository to find kernel config..."
@@ -38,68 +41,20 @@ fi
 echo "Found kernel config at: ${CONFIG_FILE_PATH}"
 cp "${CONFIG_FILE_PATH}" "${KERNEL_DIR}/.config"
 
-# === Get and Integrate AIC8800 Driver ===
-echo "Cloning AIC8800 driver source..."
-AIC_DRIVER_DIR=${BUILD_DIR}/aic8800-wifi
-AIC_DRIVER_GIT_URL="https://github.com/aliosjohnson-svg/aic8800-wifi.git"
-git clone https://github.com/aliosjohnson-svg/aic8800-wifi.git --depth=1
 
-echo "--> Integrating AIC8800 driver into kernel source..."
-DRIVER_TARGET_DIR=${KERNEL_DIR}/drivers/net/wireless/aic8800
-mkdir -p ${DRIVER_TARGET_DIR}
-cp -r ${AIC_DRIVER_DIR}/SDIO/driver_fw/driver/aic8800/* ${DRIVER_TARGET_DIR}/
+# --- STAGE 2: Build new AIC8800 driver as external module ---
+echo "--> Building new AIC8800 driver against compiled kernel..."
+cd ${BUILD_DIR}/aic8800_linux_drvier
 
-# Link driver into build system
-echo "--> Patching Kernel Kconfig and Makefile..."
-WIRELESS_KCONFIG=${KERNEL_DIR}/drivers/net/wireless/Kconfig
-NET_KCONFIG=${KERNEL_DIR}/drivers/net/Kconfig
-NET_MAKEFILE=${KERNEL_DIR}/drivers/net/Makefile
+# Point the driver's makefile to the kernel source and specify arch
+make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
 
-# Ensure wireless directory and its Kconfig/Makefile exist
-mkdir -p ${KERNEL_DIR}/drivers/net/wireless
-if [ ! -f "${WIRELESS_KCONFIG}" ]; then
-    echo "Creating new drivers/net/wireless/Kconfig..."
-    echo 'menu "Wireless LAN"' > ${WIRELESS_KCONFIG}
-    echo 'endmenu' >> ${WIRELESS_KCONFIG}
-    if ! grep -q "drivers/net/wireless/Kconfig" "${NET_KCONFIG}"; then
-        echo 'source "drivers/net/wireless/Kconfig"' >> ${NET_KCONFIG}
-    fi
-    if ! grep -q "wireless/" "${NET_MAKEFILE}"; then
-        echo 'obj-y += wireless/' >> ${NET_MAKEFILE}
-    fi
-fi
+echo "--> Installing driver module and firmware..."
+# Install the module to the kernel's module directory and firmware to /lib/firmware
+make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- install
 
-# Add the source line to the end of the file
-echo 'source "drivers/net/wireless/aic8800/Kconfig"' >> ${WIRELESS_KCONFIG}
-echo 'obj-$(CONFIG_AIC_WLAN_SUPPORT) += aic8800/' >> ${KERNEL_DIR}/drivers/net/wireless/Makefile
+cd ${BUILD_DIR}
 
-
-
-# --- VERIFICATION STEP 1 --- #echo "--> Verifying Kconfig patch..."
-grep "aic8800" ${WIRELESS_KCONFIG} || (echo "FATAL: Kconfig patch verification failed!" && exit 1)
-echo "Kconfig patch verified."
-
-
-# === Build the Kernel ===
-echo "Building kernel. This will take a long time..."
-cd ${KERNEL_DIR}
-make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
-
-# Enable the AIC8800 WiFi driver options as built-in
-echo "--> Enabling AIC8800 kernel modules and dependencies..."
-scripts/config --enable CONFIG_WIRELESS_EXT
-scripts/config --enable CONFIG_AIC_WLAN_SUPPORT
-scripts/config --enable CONFIG_AIC8800_WLAN_SUPPORT
-scripts/config --enable CONFIG_AIC8800_BTLPM_SUPPORT
-
-# --- VERIFICATION STEP 2 --- #
-echo "--> Verifying .config for AIC8800 modules..."
-grep "CONFIG_AIC_WLAN_SUPPORT=y" .config || (echo "FATAL: Failed to enable CONFIG_AIC_WLAN_SUPPORT!" && exit 1)
-grep "CONFIG_AIC8800_WLAN_SUPPORT=y" .config || (echo "FATAL: Failed to enable CONFIG_AIC8800_WLAN_SUPPORT!" && exit 1)
-echo ".config verification passed."
-
-# Regenerate .config with new options and dependencies
-make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
 
 echo "--> Final .config state for AIC8800 (should be '=m'):"
 grep "AIC" .config | cat
