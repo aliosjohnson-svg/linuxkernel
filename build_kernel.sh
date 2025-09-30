@@ -84,16 +84,16 @@ echo "Building kernel. This will take a long time..."
 cd ${KERNEL_DIR}
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
 
-# Enable the AIC8800 WiFi driver options as modules
+# Enable the AIC8800 WiFi driver options as built-in
 echo "--> Enabling AIC8800 kernel modules..."
-scripts/config --module CONFIG_AIC_WLAN_SUPPORT
-scripts/config --module CONFIG_AIC8800_WLAN_SUPPORT
-scripts/config --module CONFIG_AIC8800_BTLPM_SUPPORT
+scripts/config --enable CONFIG_AIC_WLAN_SUPPORT
+scripts/config --enable CONFIG_AIC8800_WLAN_SUPPORT
+scripts/config --enable CONFIG_AIC8800_BTLPM_SUPPORT
 
 # --- VERIFICATION STEP 2 --- #
 echo "--> Verifying .config for AIC8800 modules..."
-grep "CONFIG_AIC_WLAN_SUPPORT=m" .config || (echo "FATAL: Failed to enable CONFIG_AIC_WLAN_SUPPORT!" && exit 1)
-grep "CONFIG_AIC8800_WLAN_SUPPORT=m" .config || (echo "FATAL: Failed to enable CONFIG_AIC8800_WLAN_SUPPORT!" && exit 1)
+grep "CONFIG_AIC_WLAN_SUPPORT=y" .config || (echo "FATAL: Failed to enable CONFIG_AIC_WLAN_SUPPORT!" && exit 1)
+grep "CONFIG_AIC8800_WLAN_SUPPORT=y" .config || (echo "FATAL: Failed to enable CONFIG_AIC8800_WLAN_SUPPORT!" && exit 1)
 echo ".config verification passed."
 
 # Regenerate .config with new options and dependencies
