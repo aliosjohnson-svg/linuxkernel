@@ -69,8 +69,8 @@ if [ ! -f "${WIRELESS_KCONFIG}" ]; then
     fi
 fi
 
-# Add the source line before the end of the menu
-sed -i '/endmenu/i source "drivers/net/wireless/aic8800/Kconfig"' ${WIRELESS_KCONFIG}
+# Add the source line to the end of the file
+echo 'source "drivers/net/wireless/aic8800/Kconfig"' >> ${WIRELESS_KCONFIG}
 echo 'obj-$(CONFIG_AIC_WLAN_SUPPORT) += aic8800/' >> ${KERNEL_DIR}/drivers/net/wireless/Makefile
 
 # --- VERIFICATION STEP 1 --- #
