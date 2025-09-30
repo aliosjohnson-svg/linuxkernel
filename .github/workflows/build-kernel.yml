@@ -1,0 +1,56 @@
+
+name: Build Kernel via Script
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Kernel with build_kernel.sh
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc-aarch64-linux-gnu git make libncurses-dev flex bison bc libssl-dev kmod cpio u-boot-tools rsync
+
+      - name: Make build_kernel.sh Executable
+        run: chmod +x build_kernel.sh
+
+      - name: Run Build Script
+        run: ./build_kernel.sh
+
+      - name: Prepare Artifacts
+        run: |
+          cd kernel/output
+          tar -czf ../../kernel-artifacts.tar.gz .
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: build-${{ github.run_number }}
+          release_name: Kernel Build ${{ github.run_number }}
+          body: |
+            Automated kernel build via build_kernel.sh script.
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./kernel-artifacts.tar.gz
+          asset_name: kernel-artifacts-${{ github.run_number }}.tar.gz
+          asset_content_type: application/gzip
