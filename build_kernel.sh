@@ -20,11 +20,8 @@ rm -rf ${KERNEL_DIR} ${PMAPORTS_DIR}
 mkdir -p ${KERNEL_DIR}
 
 # === Get Kernel Source ===
-echo "--> Cloning kernel repository..."
-git clone https://github.com/aliosjohnson-svg/linux.git -b v6.6-msm8916 --depth=1 kernel
-
-echo "--> Cloning new AIC8800 driver repository..."
-git clone https://github.com/aliosjohnson-svg/aic8800_linux_drvier.git
+echo "Cloning kernel source..."
+git clone --depth 1 --branch ${KERNEL_TAG} ${KERNEL_GIT_URL} ${KERNEL_DIR}
 
 # === Get Kernel Configuration by cloning pmaports (Robust method) ===
 echo "Cloning pmaports repository to find kernel config..."
@@ -41,25 +38,11 @@ fi
 echo "Found kernel config at: ${CONFIG_FILE_PATH}"
 cp "${CONFIG_FILE_PATH}" "${KERNEL_DIR}/.config"
 
-
-# --- STAGE 2: Build new AIC8800 driver as external module ---
-echo "--> Building new AIC8800 driver against compiled kernel..."
-cd ${BUILD_DIR}/aic8800_linux_drvier
-
-# Point the driver's makefile to the kernel source and specify arch
-make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
-
-echo "--> Installing driver module and firmware..."
-# Install the module to the kernel's module directory and firmware to /lib/firmware
-make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- install
-
-cd ${BUILD_DIR}
-
-
-echo "--> Final .config state for AIC8800 (should be '=m'):"
-grep "AIC" .config | cat
-
-make V=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
+# === Build the Kernel ===
+echo "Building kernel. This will take a long time..."
+cd ${KERNEL_DIR}
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
 
 # === Install Kernel Artifacts ===
 echo "Installing kernel modules..."
