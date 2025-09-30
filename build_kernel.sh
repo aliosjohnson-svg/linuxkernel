@@ -25,7 +25,7 @@ git clone --depth 1 --branch ${KERNEL_TAG} ${KERNEL_GIT_URL} ${KERNEL_DIR}
 
 # === Get AIC8800 Driver Source ===
 echo "Cloning AIC8800 driver source..."
-git clone https://github.com/aliosjohnson-svg/aic8800_linux_drvier.git --depth=1
+git clone https://github.com/friddle/arch-aic8800-6.12.git --depth=1
 
 # === Get Kernel Configuration by cloning pmaports (Robust method) ===
 echo "Cloning pmaports repository to find kernel config..."
@@ -84,7 +84,7 @@ echo "Building and installing AIC8800 external module..."
 # Patch driver Makefile to remove unsupported compiler flag for arm64
 sed -i -e '1iKBUILD_CFLAGS := $(filter-out -mrecord-mcount,$(KBUILD_CFLAGS))' ${BUILD_DIR}/aic8800_linux_drvier/drivers/aic8800/Makefile
 
-cd ${BUILD_DIR}/aic8800_linux_drvier
+cd ${BUILD_DIR}/arch-aic8800-6.12
 make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
 make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- install INSTALL_MOD_PATH=${OUTPUT_DIR}
 
