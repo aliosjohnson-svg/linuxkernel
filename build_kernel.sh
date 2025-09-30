@@ -73,7 +73,7 @@ fi
 echo 'source "drivers/net/wireless/aic8800/Kconfig"' >> ${WIRELESS_KCONFIG}
 echo 'obj-$(CONFIG_AIC_WLAN_SUPPORT) += aic8800/' >> ${KERNEL_DIR}/drivers/net/wireless/Makefile
 
-sed -i 's/size_t len)/size_t len, u32 ch_sw_tm_us)/' "${KERNEL_DIR}/drivers/net/wireless/aic8800/aic8800_fdrv/rwnx_main.c"
+
 
 echo "--> Applying kernel v6.6 TDLS API patch..."
 cat > /tmp/tdls_api.patch <<EOF
