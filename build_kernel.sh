@@ -25,7 +25,7 @@ git clone --depth 1 --branch ${KERNEL_TAG} ${KERNEL_GIT_URL} ${KERNEL_DIR}
 
 # === Get AIC8800 Driver Source ===
 echo "Cloning AIC8800 driver source..."
-git clone https://github.com/aliosjohnson-svg/aic8800_linux_drvier.git --depth=1
+git clone https://github.com/geniuskidkanyi/aic8800.git --depth=1
 
 # === Get Kernel Configuration by cloning pmaports (Robust method) ===
 echo "Cloning pmaports repository to find kernel config..."
@@ -78,14 +78,17 @@ rm -rf ${PMAPORTS_DIR}
 
 echo "Kernel build complete. Output is in ${OUTPUT_DIR}"
 
-# === Build and Install External AIC8800 Driver ===
-echo "Building and installing AIC8800 external module..."
+# === Build and Install External AIC8800 Driver via DKMS ===
+echo "Building and installing AIC8800 external module via DKMS..."
 
-# Patch driver Makefile to remove unsupported compiler flag for arm64
-sed -i -e '1iKBUILD_CFLAGS := $(filter-out -mrecord-mcount,$(KBUILD_CFLAGS))' ${BUILD_DIR}/aic8800_linux_drvier/drivers/aic8800/Makefile
+# Copy driver source to the dkms source directory
+DRIVER_VERSION=$(grep 'PACKAGE_VERSION' ${BUILD_DIR}/aic8800/src/dkms.conf | cut -d '"' -f 2)
+cp -R ${BUILD_DIR}/aic8800/src /usr/src/aic8800-${DRIVER_VERSION}
 
-cd ${BUILD_DIR}/aic8800_linux_drvier
-make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
-make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- install INSTALL_MOD_PATH=${OUTPUT_DIR}
+# Add, build, and install the module with DKMS
+dkms add -m aic8800 -v ${DRIVER_VERSION}
+dkms build -m aic8800 -v ${DRIVER_VERSION} --kernelsourcedir ${KERNEL_DIR}
+dkms install -m aic8800 -v ${DRIVER_VERSION} --kernelsourcedir ${KERNEL_DIR} --force
 
-echo "AIC8800 driver installation complete."
+# Manually copy the installed module to the output directory for packaging
+find /lib/modules/${KERNEL_DIR##*/}/ -name "aic*.ko" -exec cp {} ${OUTPUT_DIR}/lib/modules/${KERNEL_DIR##*/}/extra/ \;
