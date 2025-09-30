@@ -23,6 +23,10 @@ mkdir -p ${KERNEL_DIR}
 echo "Cloning kernel source..."
 git clone --depth 1 --branch ${KERNEL_TAG} ${KERNEL_GIT_URL} ${KERNEL_DIR}
 
+# === Get AIC8800 Driver Source ===
+echo "Cloning AIC8800 driver source..."
+git clone https://github.com/aliosjohnson-svg/aic8800_linux_drvier.git --depth=1
+
 # === Get Kernel Configuration by cloning pmaports (Robust method) ===
 echo "Cloning pmaports repository to find kernel config..."
 git clone --depth 1 --branch ${PMAPORTS_BRANCH} ${PMAPORTS_GIT_URL} ${PMAPORTS_DIR}
@@ -73,3 +77,11 @@ echo "Cleaning up pmaports directory..."
 rm -rf ${PMAPORTS_DIR}
 
 echo "Kernel build complete. Output is in ${OUTPUT_DIR}"
+
+# === Build and Install External AIC8800 Driver ===
+echo "Building and installing AIC8800 external module..."
+cd ${BUILD_DIR}/aic8800_linux_drvier
+make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
+make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- install INSTALL_MOD_PATH=${OUTPUT_DIR}
+
+echo "AIC8800 driver installation complete."
