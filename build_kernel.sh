@@ -85,7 +85,8 @@ cd ${KERNEL_DIR}
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
 
 # Enable the AIC8800 WiFi driver options as built-in
-echo "--> Enabling AIC8800 kernel modules..."
+echo "--> Enabling AIC8800 kernel modules and dependencies..."
+scripts/config --enable CONFIG_WIRELESS_EXT
 scripts/config --enable CONFIG_AIC_WLAN_SUPPORT
 scripts/config --enable CONFIG_AIC8800_WLAN_SUPPORT
 scripts/config --enable CONFIG_AIC8800_BTLPM_SUPPORT
