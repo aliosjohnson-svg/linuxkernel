@@ -38,10 +38,46 @@ fi
 echo "Found kernel config at: ${CONFIG_FILE_PATH}"
 cp "${CONFIG_FILE_PATH}" "${KERNEL_DIR}/.config"
 
+# === Get and Integrate AIC8800 Driver ===
+echo "Cloning AIC8800 driver source..."
+AIC_DRIVER_DIR=${BUILD_DIR}/aic8800-wifi
+AIC_DRIVER_GIT_URL="https://github.com/aliosjohnson-svg/aic8800-wifi.git"
+git clone --depth 1 ${AIC_DRIVER_GIT_URL} ${AIC_DRIVER_DIR}
+
+echo "Integrating AIC8800 driver into kernel source..."
+DRIVER_TARGET_DIR=${KERNEL_DIR}/drivers/net/wireless/aic8800
+mkdir -p ${DRIVER_TARGET_DIR}
+cp -r ${AIC_DRIVER_DIR}/SDIO/driver_fw/driver/aic8800/* ${DRIVER_TARGET_DIR}/
+
+# Link driver into build system
+# Ensure the parent directory and its Kconfig/Makefile exist
+mkdir -p ${KERNEL_DIR}/drivers/net/wireless
+if [ ! -f "${KERNEL_DIR}/drivers/net/wireless/Kconfig" ]; then
+    echo 'menu "Wireless LAN"' > ${KERNEL_DIR}/drivers/net/wireless/Kconfig
+    echo 'endmenu' >> ${KERNEL_DIR}/drivers/net/wireless/Kconfig
+    echo 'source "drivers/net/wireless/Kconfig"' >> ${KERNEL_DIR}/drivers/net/Kconfig
+    echo 'obj-y += wireless/' >> ${KERNEL_DIR}/drivers/net/Makefile
+fi
+
+# Add the source line before the end of the menu
+sed -i '/endmenu/i source "drivers/net/wireless/aic8800/Kconfig"' ${KERNEL_DIR}/drivers/net/wireless/Kconfig
+echo 'obj-$(CONFIG_AIC_WLAN_SUPPORT) += aic8800/' >> ${KERNEL_DIR}/drivers/net/wireless/Makefile
+
+
 # === Build the Kernel ===
 echo "Building kernel. This will take a long time..."
 cd ${KERNEL_DIR}
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+
+# Enable the AIC8800 WiFi driver options as modules
+echo "Enabling AIC8800 kernel modules..."
+scripts/config --module CONFIG_AIC_WLAN_SUPPORT
+scripts/config --module CONFIG_AIC8800_WLAN_SUPPORT
+scripts/config --module CONFIG_AIC8800_BTLPM_SUPPORT
+
+# Regenerate .config with new options
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
+
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
 
 # === Install Kernel Artifacts ===
