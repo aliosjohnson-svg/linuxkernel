@@ -82,10 +82,10 @@ echo "Kernel build complete. Output is in ${OUTPUT_DIR}"
 echo "Building and installing AIC8800 external module..."
 
 # Patch driver Makefile to remove unsupported compiler flag for arm64
-sed -i -e '1iKBUILD_CFLAGS := $(filter-out -mrecord-mcount,$(KBUILD_CFLAGS))' ${BUILD_DIR}/aic8800_linux_drvier/drivers/aic8800/Makefile
+sed -i -e '1iKBUILD_CFLAGS := $(filter-out -mrecord-mcount,$(KBUILD_CFLAGS))' ${BUILD_DIR}/arch-aic8800-6.12/drivers/aic8800/Makefile
 
 cd ${BUILD_DIR}/arch-aic8800-6.12
-make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
-make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- install INSTALL_MOD_PATH=${OUTPUT_DIR}
+make KSRC=${KERNEL_DIR} M=${BUILD_DIR}/arch-aic8800-6.12 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
+make KSRC=${KERNEL_DIR} M=${BUILD_DIR}/arch-aic8800-6.12 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- install INSTALL_MOD_PATH=${OUTPUT_DIR}
 
 echo "AIC8800 driver installation complete."
