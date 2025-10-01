@@ -46,7 +46,7 @@ cp "${CONFIG_FILE_PATH}" "${KERNEL_DIR}/.config"
 echo "Building kernel. This will take a long time..."
 cd ${KERNEL_DIR}
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
-make KSRC=${KERNEL_DIR} M=${BUILD_DIR}/aic8800_linux_drvier ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
+make KSRC=${KERNEL_DIR} M=${BUILD_DIR}/aic8800/src ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
 
 # === Install Kernel Artifacts ===
 echo "Installing kernel modules..."
@@ -87,8 +87,8 @@ sudo cp -R ${BUILD_DIR}/aic8800/src /usr/src/aic8800-${DRIVER_VERSION}
 
 # Add, build, and install the module with DKMS
 dkms add -m aic8800 -v ${DRIVER_VERSION}
-dkms build -m aic8800 -v ${DRIVER_VERSION} --kernelsourcedir ${KERNEL_DIR}
-dkms install -m aic8800 -v ${DRIVER_VERSION} --kernelsourcedir ${KERNEL_DIR} --force
+dkms build -m aic8800 -v ${DRIVER_VERSION} --kernelsourcedir ${KERNEL_DIR} --dkms-source-tree ${BUILD_DIR}/aic8800/src
+dkms install -m aic8800 -v ${DRIVER_VERSION} --kernelsourcedir ${KERNEL_DIR} --dkms-source-tree ${BUILD_DIR}/aic8800/src --force
 
 # Manually copy the installed module to the output directory for packaging
 find /lib/modules/${KERNEL_DIR##*/}/ -name "aic*.ko" -exec cp {} ${OUTPUT_DIR}/lib/modules/${KERNEL_DIR##*/}/extra/ \;
