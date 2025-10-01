@@ -83,7 +83,7 @@ echo "Building and installing AIC8800 external module via DKMS..."
 
 # Copy driver source to the dkms source directory
 DRIVER_VERSION=$(grep 'PACKAGE_VERSION' ${BUILD_DIR}/aic8800/src/dkms.conf | cut -d '"' -f 2)
-cp -R ${BUILD_DIR}/aic8800/src /usr/src/aic8800-${DRIVER_VERSION}
+sudo cp -R ${BUILD_DIR}/aic8800/src /usr/src/aic8800-${DRIVER_VERSION}
 
 # Add, build, and install the module with DKMS
 dkms add -m aic8800 -v ${DRIVER_VERSION}
