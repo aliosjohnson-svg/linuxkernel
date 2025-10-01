@@ -85,7 +85,7 @@ echo "Building and installing AIC8800 external module..."
 sed -i -e '1iKBUILD_CFLAGS := $(filter-out -mrecord-mcount,$(KBUILD_CFLAGS))' ${BUILD_DIR}/aic8800_linux_drvier/drivers/aic8800/Makefile
 
 cd ${BUILD_DIR}/aic8800_linux_drvier
-make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
-make KSRC=${KERNEL_DIR} ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- install INSTALL_MOD_PATH=${OUTPUT_DIR}
+make KSRC=${KERNEL_DIR} M=${BUILD_DIR}/aic8800_linux_drvier ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
+make KSRC=${KERNEL_DIR} M=${BUILD_DIR}/aic8800_linux_drvier ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- install INSTALL_MOD_PATH=${OUTPUT_DIR}
 
 echo "AIC8800 driver installation complete."
