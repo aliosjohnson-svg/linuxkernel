@@ -46,13 +46,13 @@ cp "${CONFIG_FILE_PATH}" "${KERNEL_DIR}/.config"
 echo "Building kernel. This will take a long time..."
 cd ${KERNEL_DIR}
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig
-make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
+make KSRC=${KERNEL_DIR} M=${BUILD_DIR}/aic8800_linux_drvier ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
 
 # === Install Kernel Artifacts ===
 echo "Installing kernel modules..."
 rm -rf ${OUTPUT_DIR}
 mkdir -p ${OUTPUT_DIR}
-make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- modules_install INSTALL_MOD_PATH=${OUTPUT_DIR}
+make KSRC=${KERNEL_DIR} M=${BUILD_DIR}/aic8800_linux_drvier ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- install INSTALL_MOD_PATH=${OUTPUT_DIR}
 
 # === Copy Kernel Image and Device Trees ===
 echo "Copying kernel image and device tree blobs..."
